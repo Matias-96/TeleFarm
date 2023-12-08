@@ -99,6 +99,25 @@ function init_db(){
           console.log("Initialized DB");
       }
   });
+  db.run(`CREATE TABLE IF NOT EXISTS measurement(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nr INTEGER,
+    time_stamp INTEGER,
+    water INTEGER,
+    moisture INTEGER,
+    temp INTEGER,
+    light INTEGER,
+    profile TEXT
+    );
+`, (error) => {
+  if(error){
+  console.log(error)
+  process.exit()
+  }
+  else {
+  console.log("Initialized DB")
+  }
+})
 }
 
 app.get('/profiles', (req, res) => {
@@ -214,6 +233,10 @@ app.delete('/deleteProfile', (req, res) => {
       }
   });
 });
+
+app.get("/statistics", (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'data.html'));
+})
 
 //clearDatabase()
 //insertTestData()
