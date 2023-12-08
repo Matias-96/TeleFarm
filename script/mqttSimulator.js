@@ -7,8 +7,8 @@ const options = {
 
 const client = mqtt.connect(brokerUrl, options);
 
-let soilMoisture = 100;
-let tankLevel = 100;
+let moisture = 100;
+let water = 100;
 let irrigate = false;
 let pumpStatus = false;
 
@@ -16,11 +16,11 @@ function irrigateCheck() {
   // conditions are met or pump is commanded
   if (irrigate || pumpStatus) {
     if (tankLevel > 0) {
-      soilMoisture = 100;
-      tankLevel -= 10; // water in the tank, use it
+      moisture = 100;
+      water -= 10; // water in the tank, use it
     } else {
-      soilMoisture = 100;
-      tankLevel = 100; // tank empty, user refills tank
+      moisture = 100;
+      water = 100; // tank empty, user refills tank
     }
     irrigate = false;
     pumpStatus = false;
@@ -30,12 +30,13 @@ function irrigateCheck() {
 // Mock data
 function measure() {
 
-  if (soilMoisture > 0) {
-    soilMoisture -= 1;
+  if (moisture > 0) {
+    moisture -= 1;
   }
 
-  const temperature = Math.floor(Math.random() * 16) + 15;
-  const lightLevel = Math.floor(Math.random() * 25000);
+  const temp = Math.floor(Math.random() * 16) + 15;
+  const light = Math.floor(Math.random() * 25000);
+  const time = new Date().toISOString();;
 
   // example of user configuration/irrigation profile
   // if (temperature >= 15 && soilMoisture < 50) irrigate = true;
@@ -43,10 +44,11 @@ function measure() {
   irrigateCheck();
 
   const data = {
-    tankLevel,
-    soilMoisture,
-    temperature,
-    lightLevel,
+    water,
+    moisture,
+    temp,
+    light,
+    time
   };
 
   client.publish('telefarm/status', JSON.stringify(data));
