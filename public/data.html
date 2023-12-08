@@ -285,6 +285,7 @@ for(let i = 0; i < checkboxes.length; i++){
 
 //handling message event
 mywsServer.onmessage = function(event){
+
   if(!live_data.checked){
     return
   }
@@ -307,11 +308,11 @@ mywsServer.onmessage = function(event){
   }
 
   if(d.light !== undefined){
-    light.push(d.rh)
+    light.push(d.light)
     if(light.length > 100) light.shift()
   }
   if(d.time !== undefined){
-    time_stamps.push(new Date(d.time_stamp))
+    time_stamps.push(new Date(d.time))
     if(time_stamps.length > 100) time_stamps.shift()
   }
   graph.update()

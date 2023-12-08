@@ -15,7 +15,7 @@ let pumpStatus = false;
 function irrigateCheck() {
   // conditions are met or pump is commanded
   if (irrigate || pumpStatus) {
-    if (tankLevel > 0) {
+    if (water > 0) {
       moisture = 100;
       water -= 10; // water in the tank, use it
     } else {
@@ -35,8 +35,9 @@ function measure() {
   }
 
   const temp = Math.floor(Math.random() * 16) + 15;
-  const light = Math.floor(Math.random() * 25000);
-  const time = new Date().toISOString();;
+  const light = Math.floor(Math.random() * 10);
+  const time_stamp = new Date()
+  const time = time_stamp.getTime()
 
   // example of user configuration/irrigation profile
   // if (temperature >= 15 && soilMoisture < 50) irrigate = true;
