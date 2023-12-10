@@ -218,4 +218,8 @@ app.delete('/deleteProfile', (req, res) => {
 //clearDatabase()
 //insertTestData()
 
+app.get('/data', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'data.html')); // Send the profiles.html file
+});
+
 init_db();

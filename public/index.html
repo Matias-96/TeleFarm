@@ -12,7 +12,7 @@
     <div class=logo>
         <img src="placeholder.png" alt="Plant png">
         <div>
-          <a href="http://localhost:3000" class="projectname">TeleFarm</a>
+          <a href="http://localhost:3000" class="home">TeleFarm</a>
         </div>
     </div>
     <div class="dropdown">
@@ -22,8 +22,8 @@
           </select>
         </div>
     </div>
-    <a href="http://localhost:3000/profiles"><button type="button" class="createbtn">Create/Modify Profile</button></a>
-    <a href="#" class="analytics">Analytics</a>
+    <a href="http://localhost:3000/profiles" class="profile">Create/Modify Profile</a>
+    <a href="http://localhost:3000/data" class="statistics">Statistics</a>
 </div>
 
 <div class=system-view>
@@ -99,21 +99,21 @@
   }
   updateSelectOptions();
   document.getElementById('profileNames').addEventListener('click', function() {
-      updateSelectOptions();
+    updateSelectOptions();
   });
 
   document.getElementById('profileNames').addEventListener('change', function() {
-            const selectedName = document.getElementById('profileNames').value;
+    const selectedName = document.getElementById('profileNames').value;
 
-            fetch(`/profileData?name=${selectedName}`)
-                .then(response => response.json())
-                .then(data => {
-                    const profile = data;
-                    console.log(profile[0])
-                    document.getElementById('notificationMessage').textContent = profile[0].name;
-                })
-                .catch(error => console.error(error));
-        });
+    fetch(`/profileData?name=${selectedName}`)
+        .then(response => response.json())
+        .then(data => {
+            const profile = data;
+            console.log(profile[0])
+            document.getElementById('notificationMessage').textContent = profile[0].name;
+        })
+        .catch(error => console.error(error));
+  });
 </script>
 </body>
 </html>
