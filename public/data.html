@@ -11,18 +11,27 @@
         <div class=logo>
             <img src="placeholder.png" alt="Plant png">
             <div>
-                <a href="http://localhost:3000" class="home">TeleFarm</a>
+              <a href="http://localhost:3000" class="home">TeleFarm</a>
             </div>
         </div>
         <div class="dropdown">
             <button class="dropbtn">Profiles</button>
             <div class="dropdown-content">
-                <select id="profileNames"></select>
+              <select id="profileNames">
+              </select>
             </div>
         </div>
         <a href="http://localhost:3000/profiles" class="profile">Create/Modify Profile</a>
-        <a href="http://localhost:3000/data" class="statistics">Statistics</a>
+        <a href="http://localhost:3000/statistics" class="statistics">Statistics</a>
     </div>
+
+    <div class="inline_element">
+        <h1 class="left-element">Statistics</h1>
+        <h1 class="center-element" id="selectedProfile"></h1>
+    </div>
+
+    <p id="error" style="color: red;"></p>
+
     <div id="container">
         <div>
             <div id="date-input-container">
@@ -62,12 +71,6 @@
                     <td>Left</td>
                 </tr>
                 <tr>
-                    <td><input type="checkbox" name="show-temp" id="show-temp" checked></td>
-                    <td>Temperature</td>
-                    <td>C</td>
-                    <td>Left</td>
-                </tr>
-                <tr>
                     <td><input type="checkbox" name="show-light" id="show-light" checked></td>
                     <td>Light</td>
                     <td>%</td>
@@ -94,11 +97,10 @@
 
     let water = [0]
     let moisture = [0]
-    let temp = [0]
     let light = [0]
     let time_stamps = [new Date()]
 
-    console.log(location.host)
+    //console.log(location.host)
 
     const url = "ws://localhost:3000"
     const mywsServer = new WebSocket(url)
@@ -107,7 +109,6 @@
     function reset_data(){
         water = []
         moisture = []
-        temp = []
         light = []
         time_stamps = []
     }
@@ -117,8 +118,7 @@
         if(live_data.checked){
             graph.data.datasets[0].data = water
             graph.data.datasets[1].data = moisture
-            graph.data.datasets[2].data = temp
-            graph.data.datasets[3].data = light
+            graph.data.datasets[2].data = light
             graph.data.labels = time_stamps
         }
     })
@@ -198,12 +198,6 @@
             yAxisID: "LEFT",
         },
         {
-            label: "Temp",
-            data: temp,
-            borderWidth: 2,
-            yAxisID: "LEFT",
-        },
-        {
             label: "Light",
             data: light,
             borderWidth: 2,
@@ -222,15 +216,12 @@
     reset_data()
     live_data.checked = false
 
-    let path = "/statistcs/data?"
-    if(water.checked) {
+    let path = "/statistics/data?"
+    if(cb_water.checked) {
         path += "water=1&"
     }
     if(cb_moisture.checked) {
         path += "moisture=1&"
-    }
-    if(cb_temp.checked) {
-        path += "temp=1&"
     }
     if(cb_light.checked) {
         path += "light=1&"
@@ -240,29 +231,26 @@
         path += "start=" + new Date(start_time.value).getTime()
         path += "&end=" + new Date(end_time.value).getTime()
     }
-    console.log(path)
+    //console.log(path)
     fetch(path)
-    .then((res) => res.json())
     .then((res) => {
-    console.log(res)
+        //console.log(res)
+        return res.json()
+    })
+    .then((res) => {
 
-    if(cb_set_point.checked && res.setpoint) {
-        graph.data.datasets[0].data = res.water.slice()
+    if(cb_water.checked && res[0].water) {
+        graph.data.datasets[0].data = res.map(item => item.water);
     }
-    if(cb_pressure.checked && res.pressure){
-        graph.data.datasets[1].data = res.moisture.slice()
+    if(cb_moisture.checked && res[0].moisture){
+        graph.data.datasets[1].data = res.map(item => item.moisture);
     }
-    if(cb_speed.checked && res.speed){
-        graph.data.datasets[2].data = res.temp.slice()
-    }
-    if(cb_temperature.checked && res.temperature){
-        graph.data.datasets[3].data = res.light.slice()
+    if(cb_light.checked && res[0].light){
+        graph.data.datasets[2].data = res.map(item => item.light);
     }
     time_stamps = []
-    for(let date of res.time_stamp){
-        time_stamps.push(new Date(date))
-    }
-    graph.data.labels = time_stamps.slice()
+    time_stamps = res.map(item => new Date(item.time_stamp));
+    graph.data.labels = time_stamps;
     graph.update()
     })
 
@@ -273,10 +261,9 @@
 
     const cb_water = document.getElementById("show-water")
     const cb_moisture = document.getElementById("show-moisture")
-    const cb_temp = document.getElementById("show-temp")
     const cb_light = document.getElementById("show-light")
 
-    let checkboxes = [cb_water, cb_moisture, cb_temp, cb_light]
+    let checkboxes = [cb_water, cb_moisture, cb_light]
     // Adding eventlisteners for the checkboxes to hide or show data on the graph
     for(let i = 0; i < checkboxes.length; i++){
     checkboxes[i].addEventListener("click", (event) =>{
@@ -297,7 +284,21 @@
     }
     const { data } = event
     let d = JSON.parse(data)
-    console.log(d)
+    //console.log(d)
+    //console.log(d.errors)
+    let date = new Date()
+    //let time_stamp = date.getTime()
+    if(d.errors != 0){
+        if(d.errors == 1){
+        document.querySelector('#error').textContent = "Sensor error!!!";
+        }
+        else {
+        document.querySelector('#error').textContent = "Water level too low!!!";
+        }
+    }
+    else {
+        document.querySelector('#error').textContent = "";
+    }
     if(d.water !== undefined){
         water.push(d.water)
         if(water.length > 100) water.shift()
@@ -308,56 +309,69 @@
         if(moisture.length > 100) moisture.shift()
     }
 
-    if(d.temp !== undefined){
-        temp.push(d.temp)
-        if(temp.length > 100) temp.shift()
-    }
-
     if(d.light !== undefined){
         light.push(d.light)
         if(light.length > 100) light.shift()
     }
-    if(d.time !== undefined){
-        time_stamps.push(new Date(d.time))
+    if(date !== undefined){
+        time_stamps.push(date)
         if(time_stamps.length > 100) time_stamps.shift()
     }
     graph.update()
     }
-
     function updateSelectOptions() {
-    fetch('/selectData')
-        .then(response => response.json())
-        .then(data => {
-            const selectElement = document.getElementById('profileNames');
-            // Clear existing options
-            selectElement.innerHTML = '';
+        fetch('/selectData')
+            .then(response => response.json())
+            .then(data => {
+                const selectElement = document.getElementById('profileNames');
+                // Clear existing options
+                selectElement.innerHTML = '';
 
-            data.forEach(profile => {
-                const option = document.createElement('option');
-                option.value = profile.name;
-                option.textContent = profile.name;
-                selectElement.appendChild(option);
-            });
-        })
-        .catch(error => console.error(error));
-  }
-  updateSelectOptions();
-  document.getElementById('profileNames').addEventListener('click', function() {
+                data.forEach(profile => {
+                    const option = document.createElement('option');
+                    option.value = profile.name;
+                    option.textContent = profile.name;
+                    selectElement.appendChild(option);
+                });
+            })
+            .catch(error => console.error(error));
+    }
     updateSelectOptions();
-  });
+    document.getElementById('profileNames').addEventListener('click', function() {
+        updateSelectOptions();
+    });
 
-  document.getElementById('profileNames').addEventListener('change', function() {
-    const selectedName = document.getElementById('profileNames').value;
+    document.getElementById('profileNames').addEventListener('change', function() {
+                const selectedName = document.getElementById('profileNames').value;
 
-    fetch(`/profileData?name=${selectedName}`)
-        .then(response => response.json())
-        .then(data => {
-            const profile = data;
-            console.log(profile[0])
-            document.getElementById('notificationMessage').textContent = profile[0].name;
-        })
-        .catch(error => console.error(error));
-  });
+                fetch(`/profileData?name=${selectedName}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const profile = data;
+                        console.log(profile[0])
+                        reset_data()
+                        graph.data.datasets[0].data = water
+                        graph.data.datasets[1].data = moisture
+                        graph.data.datasets[2].data = light
+                        graph.data.labels = time_stamps
+                        //document.getElementById('notificationMessage').textContent = profile[0].name;
+                    })
+                    .catch(error => console.error(error));
+                    setTimeout(() => {
+                        updateSelectedProfile();
+                    }, 100);
+            });
+            function updateSelectedProfile() {
+            fetch('/selectedProfile')
+                .then(response => response.json())
+                .then(data => {
+                    const selectedProfile = document.getElementById('selectedProfile');
+                    selectedProfile.textContent = data.name || 'No selected profile';
+                })
+                .catch(error => console.error(error));
+            }
+
+            updateSelectedProfile();
     </script>
 </body>
 </html>
