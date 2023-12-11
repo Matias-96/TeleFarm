@@ -23,28 +23,30 @@
         </div>
     </div>
     <a href="http://localhost:3000/profiles" class="profile">Create/Modify Profile</a>
-    <a href="http://localhost:3000/data" class="statistics">Statistics</a>
+    <a href="http://localhost:3000/statistics" class="statistics">Statistics</a>
 </div>
+
+<div class="inline_element">
+  <h1 class="center-element" id="selectedProfile"></h1>
+</div><p id="error" style="color: red;"></p>
+
 
 <div class=system-view>
-    <div class=monitor>
-        <img src="tank.svg" alt="tank svg">
-        <span id="tankLevel"></span>
+  <div class=monitor>
+      <img src="tank.svg" alt="tank svg">
+      <span id="tankLevel"></span>
 
-        <img src="soil.svg" alt="soil svg">
-        <span id="soilMoisture"></span>
+      <img src="soil.svg" alt="soil svg">
+      <span id="soilMoisture"></span>
 
-        <img src="temperature.svg" alt="temperature svg">
-        <span id="temperature"></span>
-
-        <img src="light.svg" alt="light svg">
-        <span id="lightLevel"></span>
-    </div>
+      <img src="light.svg" alt="light svg">
+      <span id="lightLevel"></span>
+  </div>
 </div>
-<div class="profile-notification">
+<!-- <div class="profile-notification">
   <p></p>
   <p id="notificationMessage"></p>
-</div>
+</div> -->
 <footer>
     <button id="pumpButton">Pump it Up</button>
 </footer>
@@ -58,7 +60,7 @@
     fetch('/pump', { method: 'POST' })
     .then(response => {
       if (response.ok) {
-        console.log('Pump triggered successfully');
+        //console.log('Pump triggered successfully');
       } else {
         console.error('Failed to trigger pump');
       }
@@ -74,10 +76,22 @@
 
   socket.onmessage = function(event) {
     const data = JSON.parse(event.data);
-    document.getElementById('tankLevel').innerText = data.tankLevel + ' %';
-    document.getElementById('soilMoisture').innerText = data.soilMoisture + ' %';
-    document.getElementById('temperature').innerText = data.temperature + ' °C';
-    document.getElementById('lightLevel').innerText = data.lightLevel + ' Lux';
+    //console.log(data.errors)
+    //console.log(data)
+    if(data.errors != 0){
+      if(data.errors == 1){
+      document.querySelector('#error').textContent = "Sensor error!!!";
+      }
+      else {
+      document.querySelector('#error').textContent = "Water level too low!!!";
+      }
+    }
+    else {
+      document.getElementById('error').textContent = "";
+    }
+    document.getElementById('tankLevel').innerText = data.water + ' %';
+    document.getElementById('soilMoisture').innerText = data.moisture + ' %';
+    document.getElementById('lightLevel').innerText = data.light + ' Lux';
   };
 
   function updateSelectOptions() {
@@ -99,21 +113,34 @@
   }
   updateSelectOptions();
   document.getElementById('profileNames').addEventListener('click', function() {
-    updateSelectOptions();
+      updateSelectOptions()
   });
 
   document.getElementById('profileNames').addEventListener('change', function() {
-    const selectedName = document.getElementById('profileNames').value;
+            const selectedName = document.getElementById('profileNames').value;
 
-    fetch(`/profileData?name=${selectedName}`)
+            fetch(`/profileData?name=${selectedName}`)
+                .then(response => response.json())
+                .then(data => {
+                    const profile = data
+                    //console.log(profile[0])
+                })
+                .catch(error => console.error(error));
+                setTimeout(() => {
+                    updateSelectedProfile();
+                }, 100);
+        });
+  function updateSelectedProfile() {
+    fetch('/selectedProfile')
         .then(response => response.json())
         .then(data => {
-            const profile = data;
-            console.log(profile[0])
-            document.getElementById('notificationMessage').textContent = profile[0].name;
+            const selectedProfile = document.getElementById('selectedProfile');
+            selectedProfile.textContent = data.name || 'No selected profile';
         })
         .catch(error => console.error(error));
-  });
+    }
+
+  updateSelectedProfile();
 </script>
 </body>
 </html>
